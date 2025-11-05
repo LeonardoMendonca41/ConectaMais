@@ -106,6 +106,10 @@ export default function App() {
       <Text style={styles.tituloPagina}>Olá! O que você busca?</Text>
       <ScrollView contentContainerStyle={styles.gridDashboard}>
         <CartaoDashboard icone="🗺️" titulo="Serviços próximos" onPress={() => navegarPara('MAPA')} cor={COLORS.azulCalmo} />
+<<<<<<< HEAD
+=======
+        <CartaoDashboard icone="🗂️" titulo="Catálogo de Apoio" onPress={() => navegarPara('CATALOGO')} cor={COLORS.verdeEsperanca} />
+>>>>>>> e2d34eb5ab584ead5aa750d1e796f84e05204a2c
         <CartaoDashboard icone="💬" titulo="Chat de Apoio" onPress={() => navegarPara('CHAT')} cor={COLORS.amareloSuave} />
         <CartaoDashboard icone="📅" titulo="Eventos e Vagas" onPress={() => navegarPara('EVENTOS')} cor={COLORS.azulCalmo} />
         <CartaoDashboard icone="📢" titulo="Alertas Urgentes" onPress={() => simularAcao('Alertas', 'Nenhum alerta urgente no momento.')} cor={COLORS.vermelhoAlerta} />
@@ -137,7 +141,15 @@ export default function App() {
         <TouchableOpacity style={styles.chipFiltro}><Text style={styles.chipTexto}>🏠 Abrigo</Text></TouchableOpacity>
         <TouchableOpacity style={styles.chipFiltro}><Text style={styles.chipTexto}>🩺 Saúde</Text></TouchableOpacity>
       </View>
+<<<<<<< HEAD
      const renderCatalogo = () = (
+=======
+    </View>
+  );
+
+  // Tela 4: Catálogo de Serviços
+  const renderCatalogo = () => (
+>>>>>>> e2d34eb5ab584ead5aa750d1e796f84e05204a2c
     <View style={styles.container}>
       <BotaoVoltar onPress={() => navegarPara('DASHBOARD')} />
       <Text style={[styles.tituloPagina, {textAlign: 'center', marginTop: 30}]}>Catálogo de Apoio</Text>
@@ -162,11 +174,14 @@ export default function App() {
       </ScrollView>
     </View>
   );
+<<<<<<< HEAD
     </View>
   );
 
   // Tela 4: Catálogo de Serviços
   
+=======
+>>>>>>> e2d34eb5ab584ead5aa750d1e796f84e05204a2c
 
   // Tela 5: Chat (Simulação)
   // (Nota: Chat real precisaria de FlatList e TextInput)
