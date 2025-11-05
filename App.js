@@ -7,8 +7,9 @@ import {
   TouchableOpacity,
   ScrollView,
   Modal,
-  Alert, // Usamos o Alert nativo do React Native
+  Alert,
   Dimensions,
+  TextInput, // NOVO: Importado para o formulário
 } from 'react-native';
 
 // --- Paleta de Cores Definida ---
@@ -41,11 +42,16 @@ const MOCK_EVENTOS = [
 // --- Componente Principal do App ---
 export default function App() {
   // Estado para controlar a tela atual (simulando navegação)
-  const [telaAtual, setTelaAtual] = useState('BOAS_VINDAS'); // BOAS_VINDAS, DASHBOARD, MAPA, CATALOGO, CHAT, EVENTOS, PERFIL
+  const [telaAtual, setTelaAtual] = useState('BOAS_VINDAS'); // BOAS_VINDAS, DASHBOARD, MAPA, CATALOGO, CHAT, EVENTOS, PERFIL, CADASTRO (NOVO)
   const [perfilUsuario, setPerfilUsuario] = useState(null); // 'NECESSITA_APOIO', 'OFERECE_APOIO'
   
   // Estado para o Modal de Acessibilidade
   const [modalAcessibilidadeVisivel, setModalAcessibilidadeVisivel] = useState(false);
+
+  // --- Estados para o formulário de cadastro (NOVOS) ---
+  const [nomeCadastro, setNomeCadastro] = useState('');
+  const [emailCadastro, setEmailCadastro] = useState('');
+  const [enderecoCadastro, setEnderecoCadastro] = useState('');
   
 
   // --- Funções de Navegação ---
@@ -87,9 +93,10 @@ export default function App() {
         
         <TouchableOpacity
           style={[styles.botaoSecundario]}
-          onPress={() => selecionarPerfil('OFERECE_APOIO')}
+          // NOVO: Alterado para navegar para o cadastro
+          onPress={() => navegarPara('CADASTRO')} 
           accessibilityRole="button"
-          accessibilityLabel="Quero oferecer apoio. Toque para continuar como voluntário ou organização."
+          accessibilityLabel="Quero oferecer apoio. Toque para se cadastrar."
         >
           <Text style={styles.textoBotaoSecundario}>Quero oferecer apoio</Text>
         </TouchableOpacity>
@@ -106,10 +113,8 @@ export default function App() {
       <Text style={styles.tituloPagina}>Olá! O que você busca?</Text>
       <ScrollView contentContainerStyle={styles.gridDashboard}>
         <CartaoDashboard icone="🗺️" titulo="Serviços próximos" onPress={() => navegarPara('MAPA')} cor={COLORS.azulCalmo} />
-<<<<<<< HEAD
-=======
-        <CartaoDashboard icone="🗂️" titulo="Catálogo de Apoio" onPress={() => navegarPara('CATALOGO')} cor={COLORS.verdeEsperanca} />
->>>>>>> e2d34eb5ab584ead5aa750d1e796f84e05204a2c
+        {/* NOVO: Adicionado link para Catálogo no Dashboard */}
+        <CartaoDashboard icone="📚" titulo="Catálogo de Serviços" onPress={() => navegarPara('CATALOGO')} cor={COLORS.verdeEsperanca} />
         <CartaoDashboard icone="💬" titulo="Chat de Apoio" onPress={() => navegarPara('CHAT')} cor={COLORS.amareloSuave} />
         <CartaoDashboard icone="📅" titulo="Eventos e Vagas" onPress={() => navegarPara('EVENTOS')} cor={COLORS.azulCalmo} />
         <CartaoDashboard icone="📢" titulo="Alertas Urgentes" onPress={() => simularAcao('Alertas', 'Nenhum alerta urgente no momento.')} cor={COLORS.vermelhoAlerta} />
@@ -141,15 +146,12 @@ export default function App() {
         <TouchableOpacity style={styles.chipFiltro}><Text style={styles.chipTexto}>🏠 Abrigo</Text></TouchableOpacity>
         <TouchableOpacity style={styles.chipFiltro}><Text style={styles.chipTexto}>🩺 Saúde</Text></TouchableOpacity>
       </View>
-<<<<<<< HEAD
-     const renderCatalogo = () = (
-=======
-    </View>
+    </View> // <-- CORREÇÃO: Fechamento correto da View do renderMapa
   );
 
   // Tela 4: Catálogo de Serviços
+  // CORREÇÃO: Movida para fora do renderMapa e sintaxe corrigida de () = ( para () => (
   const renderCatalogo = () => (
->>>>>>> e2d34eb5ab584ead5aa750d1e796f84e05204a2c
     <View style={styles.container}>
       <BotaoVoltar onPress={() => navegarPara('DASHBOARD')} />
       <Text style={[styles.tituloPagina, {textAlign: 'center', marginTop: 30}]}>Catálogo de Apoio</Text>
@@ -174,17 +176,8 @@ export default function App() {
       </ScrollView>
     </View>
   );
-<<<<<<< HEAD
-    </View>
-  );
-
-  // Tela 4: Catálogo de Serviços
-  
-=======
->>>>>>> e2d34eb5ab584ead5aa750d1e796f84e05204a2c
 
   // Tela 5: Chat (Simulação)
-  // (Nota: Chat real precisaria de FlatList e TextInput)
   const renderChat = () => (
     <View style={[styles.container, {paddingBottom: 80}]}>
       <BotaoVoltar onPress={() => navegarPara('DASHBOARD')} />
@@ -196,7 +189,8 @@ export default function App() {
         <Text style={styles.chatMensagem}>🤖 Buscando abrigos próximos... Encontrei o "Albergue Municipal Tia Branca". Veja no catálogo para mais detalhes.</Text>
       </ScrollView>
       <View style={styles.chatInputContainer}>
-        <Text style={styles.chatInput}>Digite sua mensagem...</Text>
+        {/* Simulação de Input */}
+        <Text style={[styles.input, { flex: 1, color: '#999', paddingTop: 14}]}>Digite sua mensagem...</Text>
         <TouchableOpacity><Text style={styles.chatEnviar}>Enviar</Text></TouchableOpacity>
       </View>
     </View>
@@ -247,6 +241,66 @@ export default function App() {
       </TouchableOpacity>
     </View>
   );
+
+  // --- NOVO: Tela 8: Cadastro ---
+  const renderCadastro = () => (
+    <View style={styles.container}>
+      <BotaoVoltar onPress={() => navegarPara('BOAS_VINDAS')} />
+      <Text style={[styles.tituloPagina, {textAlign: 'center', marginTop: 30}]}>Cadastro de Apoio</Text>
+      <ScrollView>
+        <Text style={styles.labelInput}>Nome Completo:</Text>
+        <TextInput 
+          style={styles.input} 
+          placeholder="Digite seu nome ou o nome da organização" 
+          value={nomeCadastro}
+          onChangeText={setNomeCadastro}
+          accessibilityLabel="Campo para nome completo"
+        />
+        
+        <Text style={styles.labelInput}>Email de Contato:</Text>
+        <TextInput 
+          style={styles.input} 
+          placeholder="seu.email@exemplo.com"
+          value={emailCadastro}
+          onChangeText={setEmailCadastro}
+          keyboardType="email-address"
+          autoCapitalize="none"
+          accessibilityLabel="Campo para email"
+        />
+        
+        <Text style={styles.labelInput}>Endereço:</Text>
+        <TextInput 
+          style={styles.input} 
+          placeholder="Rua, Numero, Bairro, Cidade"
+          value={enderecoCadastro}
+          onChangeText={setEnderecoCadastro}
+          keyboardType="address"
+          autoCapitalize="none"
+          accessibilityLabel="Endereço"
+        />
+
+        <TouchableOpacity
+          style={[styles.botaoPrincipal, { backgroundColor: COLORS.verdeEsperanca, marginTop: 30 }]}
+          onPress={() => {
+            // Validação simples
+            if (!nomeCadastro || !emailCadastro || !tipoApoio) {
+              simularAcao('Erro', 'Por favor, preencha todos os campos.');
+              return;
+            }
+            // Simular cadastro
+            simularAcao('Cadastro', `Cadastro de ${nomeCadastro} realizado com sucesso! Bem-vindo(a).`);
+            // Definir o perfil e navegar para o dashboard
+            selecionarPerfil('OFERECE_APOIO'); 
+          }}
+          accessibilityRole="button"
+          accessibilityLabel="Finalizar cadastro e entrar"
+        >
+          <Text style={styles.textoBotaoPrincipal}>Finalizar Cadastro</Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </View>
+  );
+
 
   // --- Modal de Acessibilidade ---
   const renderModalAcessibilidade = () => (
@@ -347,6 +401,9 @@ export default function App() {
         return renderEventos();
       case 'PERFIL':
         return renderPerfil();
+      // NOVO: Case para a tela de cadastro
+      case 'CADASTRO':
+        return renderCadastro();
       default:
         return renderBoasVindas();
     }
@@ -370,8 +427,6 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: COLORS.cinzaClaro,
-    // Adiciona padding no topo para Android (iOS é automático com SafeAreaView)
-    // paddingTop: Platform.OS === 'android' ? 25 : 0 
   },
   container: {
     flex: 1,
@@ -470,7 +525,6 @@ const styles = StyleSheet.create({
     top: 10,
     left: 20,
     zIndex: 10,
-    // backgroundColor: COLORS.cinzaClaro, // Removido para visual mais limpo
     padding: 8,
     borderRadius: 8,
   },
@@ -525,7 +579,7 @@ const styles = StyleSheet.create({
     marginRight: 16,
   },
   infoCard: {
-    flex: 1, // Permite que o texto quebre a linha se necessário
+    flex: 1, 
   },
   tituloCardCatalogo: {
     fontSize: 18,
@@ -553,7 +607,6 @@ const styles = StyleSheet.create({
   // --- Chat ---
   chatContainer: {
     flex: 1,
-    // padding: 10, // Removido para usar o padding do container principal
   },
   chatMensagem: {
     backgroundColor: COLORS.branco,
@@ -563,7 +616,6 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     maxWidth: '85%',
     alignSelf: 'flex-start',
-    // Adiciona sombra para diferenciar
     shadowColor: '#000',
     shadowOpacity: 0.05,
     shadowRadius: 2,
@@ -582,12 +634,12 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderColor: '#E0E0E0',
     backgroundColor: COLORS.cinzaClaro,
-    position: 'absolute', // Fixa na parte inferior
+    position: 'absolute', 
     bottom: 0,
     left: 0,
     right: 0,
   },
-  chatInput: {
+  chatInput: { // Estilo de simulação de Input
     flex: 1,
     padding: 10,
     backgroundColor: COLORS.branco,
@@ -650,6 +702,50 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: COLORS.preto,
   },
+
+  // --- NOVO: Estilos do Cadastro ---
+  labelInput: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: COLORS.preto,
+    marginBottom: 8,
+    marginTop: 16,
+  },
+  input: {
+    backgroundColor: COLORS.branco,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    fontSize: 16,
+    color: COLORS.preto,
+  },
+  toggleContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 8,
+  },
+  toggleBotao: {
+    flex: 1,
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: COLORS.azulCalmo,
+    alignItems: 'center',
+    backgroundColor: COLORS.branco,
+  },
+  toggleBotaoAtivo: {
+    backgroundColor: COLORS.azulCalmo,
+  },
+  toggleTexto: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: COLORS.azulCalmo,
+  },
+  toggleTextoAtivo: {
+    color: COLORS.branco,
+  },
   // --- Acessibilidade (FAB e Modal) ---
   fabAcessibilidade: {
     position: 'absolute',
@@ -680,7 +776,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     padding: 30,
-    alignItems: 'stretch', // Garante que os botões ocupem a largura
+    alignItems: 'stretch',
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
