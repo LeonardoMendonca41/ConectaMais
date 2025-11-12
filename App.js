@@ -9,8 +9,11 @@ import {
   Modal,
   Alert,
   Dimensions,
-  TextInput, // NOVO: Importado para o formulário
+  TextInput, 
+  Linking, 
 } from 'react-native';
+
+import MapView, { Marker } from 'react-native-maps';
 
 // --- Paleta de Cores Definida ---
 const COLORS = {
@@ -24,12 +27,12 @@ const COLORS = {
 };
 
 // --- Dados Simulado (Mock Data) - Belo Horizonte ---
-const MOCK_SERVICOS = [
-  { id: '1', categoria: 'Alimentação', nome: 'Restaurante Popular I', endereco: 'Av. Contorno, 11484 - Centro, Belo Horizonte', fone: '(31) 3277-6969', icone: '🍲' },
-  { id: '2', categoria: 'Abrigo', nome: 'Albergue Municipal Tia Branca', endereco: 'Rua Conselheiro Rocha, 351 - Floresta, Belo Horizonte', fone: '(31) 3277-4999', icone: '🏠' },
-  { id: '3', categoria: 'Saúde', nome: 'Centro de Saúde Savassi', endereco: 'R. Paraíba, 890 - Savassi, Belo Horizonte', fone: '(31) 3277-7722', icone: '🩺' },
-  { id: '4', categoria: 'Emprego', nome: 'CRAS Vila Marçola', endereco: 'R. Engenheiro Lucas Júlio de Proença, 73 - Serra, Belo Horizonte', fone: '(31) 3277-4300', icone: '👔' },
-  { id: '5', categoria: 'Educação', nome: 'Biblioteca Pública Estadual', endereco: 'Praça da Liberdade, 21 - Savassi, Belo Horizonte', fone: '(31) 3269-1166', icone: '📚' },
+const MOCK_SERVICOS_INICIAL = [
+  { id: '1', categoria: 'Alimentação', nome: 'Restaurante Popular I', endereco: 'Av. Contorno, 11484 - Centro, Belo Horizonte', fone: '(31) 3277-6969', icone: '🍲', coordinate: { latitude: -19.9325, longitude: -43.9180 } },
+  { id: '2', categoria: 'Abrigo', nome: 'Albergue Municipal Tia Branca', endereco: 'Rua Conselheiro Rocha, 351 - Floresta, Belo Horizonte', fone: '(31) 3277-4999', icone: '🏠', coordinate: { latitude: -19.9100, longitude: -43.9240 } },
+  { id: '3', categoria: 'Saúde', nome: 'Centro de Saúde Savassi', endereco: 'R. Paraíba, 890 - Savassi, Belo Horizonte', fone: '(31) 3277-7722', icone: '🩺', coordinate: { latitude: -19.9340, longitude: -43.9310 } },
+  { id: '4', categoria: 'Emprego', nome: 'CRAS Vila Marçola', endereco: 'R. Engenheiro Lucas Júlio de Proença, 73 - Serra, Belo Horizonte', fone: '(31) 3277-4300', icone: '👔', coordinate: { latitude: -19.9400, longitude: -43.9150 } },
+  { id: '5', categoria: 'Educação', nome: 'Biblioteca Pública Estadual', endereco: 'Praça da Liberdade, 21 - Savassi, Belo Horizonte', fone: '(31) 3269-1166', icone: '📚', coordinate: { latitude: -19.9320, longitude: -43.9340 } },
 ];
 
 const MOCK_EVENTOS = [
@@ -38,20 +41,44 @@ const MOCK_EVENTOS = [
   { id: '3', titulo: 'Distribuição de Cestas Básicas', data: '02/11 - 08h', desc: 'Local: Albergue Tia Branca. Necessário cadastro prévio.' },
 ];
 
+// Opções para o formulário de cadastro
+const CATEGORIAS_APOIO = ['Alimentação', 'Abrigo', 'Saúde', 'Emprego', 'Educação', 'Outro'];
 
 // --- Componente Principal do App ---
 export default function App() {
-  // Estado para controlar a tela atual (simulando navegação)
-  const [telaAtual, setTelaAtual] = useState('BOAS_VINDAS'); // BOAS_VINDAS, DASHBOARD, MAPA, CATALOGO, CHAT, EVENTOS, PERFIL, CADASTRO (NOVO)
+ 
+  const [telaAtual, setTelaAtual] = useState('BOAS_VINDAS'); // BOAS_VINDAS, DASHBOARD, MAPA, CATALOGO, CONTATOS, EVENTOS, PERFIL, CADASTRO, ALERTAS, NOVO_ALERTA, LOGIN_CADASTRO_APOIO, LOGIN
   const [perfilUsuario, setPerfilUsuario] = useState(null); // 'NECESSITA_APOIO', 'OFERECE_APOIO'
   
+  // Serviços agora são um estado
+  const [servicos, setServicos] = useState(MOCK_SERVICOS_INICIAL);
+
+  
+  const [alertas, setAlertas] = useState([
+      ]);
+
   // Estado para o Modal de Acessibilidade
   const [modalAcessibilidadeVisivel, setModalAcessibilidadeVisivel] = useState(false);
 
-  // --- Estados para o formulário de cadastro (NOVOS) ---
+  // --- Estados para o formulário de cadastro ---
   const [nomeCadastro, setNomeCadastro] = useState('');
   const [emailCadastro, setEmailCadastro] = useState('');
-  const [enderecoCadastro, setEnderecoCadastro] = useState('');
+  const [ruaCadastro, setRuaCadastro] = useState('');
+  const [numeroCadastro, setNumeroCadastro] = useState('');
+  const [bairroCadastro, setBairroCadastro] = useState('');
+  const [cidadeCadastro, setCidadeCadastro] = useState('');
+  const [telefoneCadastro, setTelefoneCadastro] = useState('');
+  const [tipoApoioCadastro, setTipoApoioCadastro] = useState('');
+  const [senhaCadastro, setSenhaCadastro] = useState('');
+  const [confirmarSenhaCadastro, setConfirmarSenhaCadastro] = useState('');
+  
+  // *** Formulário de novo alerta ***
+  const [tituloAlerta, setTituloAlerta] = useState('');
+  const [descAlerta, setDescAlerta] = useState('');
+  
+  // *** Estados para formulário de Login ***
+  const [emailLogin, setEmailLogin] = useState('');
+  const [senhaLogin, setSenhaLogin] = useState('');
   
 
   // --- Funções de Navegação ---
@@ -68,8 +95,41 @@ export default function App() {
   // --- Funções de Ação Simuladas ---
   
   const simularAcao = (titulo, mensagem) => {
-    // Usando o Alert nativo do React Native
+    // Alert nativo do React Native
     Alert.alert(titulo, mensagem);
+  };
+
+  // *** Função para abrir WhatsApp ***
+  const abrirWhatsApp = (fone, nome) => {
+    // Limpa o número de telefone (remove espaços, traços, parênteses)
+    const numeroLimpo = fone.replace(/\D/g, '');
+    const mensagem = `Olá, ${nome}! Vi seu contato no app Conecta+ e gostaria de uma informação.`;
+    
+    // Formato do link do WhatsApp
+    const url = `https://wa.me/55${numeroLimpo}?text=${encodeURIComponent(mensagem)}`;
+
+    // Tenta abrir o link
+    Linking.canOpenURL(url)
+      .then(supported => {
+        if (supported) {
+          return Linking.openURL(url);
+        } else {
+          simularAcao('Erro', `Não foi possível abrir o WhatsApp. Verifique se ele está instalado.`);
+        }
+      })
+      .catch(err => simularAcao('Erro', 'Ocorreu um erro ao tentar abrir o WhatsApp.'));
+  };
+
+  // Helper para pegar ícone
+  const getIconePorCategoria = (categoria) => {
+    switch (categoria) {
+      case 'Alimentação': return '🍲';
+      case 'Abrigo': return '🏠';
+      case 'Saúde': return '🩺';
+      case 'Emprego': return '👔';
+      case 'Educação': return '📚';
+      default: return '🤝'; // 'Outro' ou padrão
+    }
   };
 
   // --- Componentes de Tela (Render Functions) ---
@@ -93,19 +153,47 @@ export default function App() {
         
         <TouchableOpacity
           style={[styles.botaoSecundario]}
-          // NOVO: Alterado para navegar para o cadastro
-          onPress={() => navegarPara('CADASTRO')} 
+          onPress={() => {
+            // *** Navega para a tela de escolha (Login ou Cadastro) ***
+            navegarPara('LOGIN_CADASTRO_APOIO');
+          }}
           accessibilityRole="button"
-          accessibilityLabel="Quero oferecer apoio. Toque para se cadastrar."
+          accessibilityLabel="Quero oferecer apoio. Toque para entrar ou se cadastrar."
         >
           <Text style={styles.textoBotaoSecundario}>Quero oferecer apoio</Text>
         </TouchableOpacity>
       </View>
       
-      {/* Botão de Acessibilidade Fixo */}
       <BotaoAcessibilidade onPress={() => setModalAcessibilidadeVisivel(true)} />
     </View>
   );
+
+  // *** Tela Intermediária para Apoiadores ***
+  const renderLoginCadastroApoio = () => (
+    <View style={[styles.container, { justifyContent: 'center' }]}>
+      <BotaoVoltar onPress={() => navegarPara('BOAS_VINDAS')} />
+      
+      <View style={styles.cardEscolha}>
+        <Text style={styles.tituloCard}>Área do Apoiador</Text>
+        <TouchableOpacity
+          style={[styles.botaoPrincipal, { backgroundColor: COLORS.azulCalmo }]}
+          onPress={() => navegarPara('LOGIN')}
+          accessibilityLabel="Já tenho cadastro. Toque para entrar."
+        >
+          <Text style={styles.textoBotaoPrincipal}>Já tenho cadastro (Entrar)</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity
+          style={[styles.botaoSecundario]}
+          onPress={() => navegarPara('CADASTRO')}
+          accessibilityLabel="Quero me cadastrar para oferecer apoio."
+        >
+          <Text style={styles.textoBotaoSecundario}>Criar novo cadastro</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+
 
   // Tela 2: Dashboard (Menu Principal)
   const renderDashboard = () => (
@@ -113,11 +201,10 @@ export default function App() {
       <Text style={styles.tituloPagina}>Olá! O que você busca?</Text>
       <ScrollView contentContainerStyle={styles.gridDashboard}>
         <CartaoDashboard icone="🗺️" titulo="Serviços próximos" onPress={() => navegarPara('MAPA')} cor={COLORS.azulCalmo} />
-        {/* NOVO: Adicionado link para Catálogo no Dashboard */}
         <CartaoDashboard icone="📚" titulo="Catálogo de Serviços" onPress={() => navegarPara('CATALOGO')} cor={COLORS.verdeEsperanca} />
-        <CartaoDashboard icone="💬" titulo="Chat de Apoio" onPress={() => navegarPara('CHAT')} cor={COLORS.amareloSuave} />
+        <CartaoDashboard icone="📞" titulo="Contatos / WhatsApp" onPress={() => navegarPara('CONTATOS')} cor={COLORS.amareloSuave} />
         <CartaoDashboard icone="📅" titulo="Eventos e Vagas" onPress={() => navegarPara('EVENTOS')} cor={COLORS.azulCalmo} />
-        <CartaoDashboard icone="📢" titulo="Alertas Urgentes" onPress={() => simularAcao('Alertas', 'Nenhum alerta urgente no momento.')} cor={COLORS.vermelhoAlerta} />
+        <CartaoDashboard icone="📢" titulo="Alertas Urgentes" onPress={() => navegarPara('ALERTAS')} cor={COLORS.vermelhoAlerta} />
         <CartaoDashboard icone="⚙️" titulo="Perfil e Ajustes" onPress={() => navegarPara('PERFIL')} cor={'#8E44AD'} />
       </ScrollView>
       <TouchableOpacity 
@@ -132,31 +219,62 @@ export default function App() {
     </View>
   );
 
-  // Tela 3: Mapa (Simulação)
+  // Tela 3: Mapa (com MapView)
   const renderMapa = () => (
     <View style={styles.container}>
       <BotaoVoltar onPress={() => navegarPara('DASHBOARD')} />
       <Text style={[styles.tituloPagina, {textAlign: 'center', marginTop: 30}]}>Mapa de Serviços</Text>
-      <View style={styles.mapaPlaceholder}>
-        <Text style={styles.mapaPlaceholderTexto}>[Simulação de Mapa]</Text>
-        <Text style={{textAlign: 'center', marginTop: 10, color: COLORS.preto, paddingHorizontal: 10}}></Text>
+
+      <View style={styles.mapContainer}>
+        <MapView
+          style={styles.mapView}
+          initialRegion={{
+            latitude: -19.925,    
+            longitude: -43.93,
+            latitudeDelta: 0.0922,
+            longitudeDelta: 0.0421,
+          }}
+        >
+          {servicos.map(servico => (
+            <Marker
+              key={servico.id}
+              coordinate={servico.coordinate} 
+              title={servico.nome}
+              description={servico.endereco}
+            />
+          ))}
+        </MapView>
       </View>
+      
       <View style={styles.filtrosMapa}>
         <TouchableOpacity style={styles.chipFiltro}><Text style={styles.chipTexto}>🍲 Alimentação</Text></TouchableOpacity>
         <TouchableOpacity style={styles.chipFiltro}><Text style={styles.chipTexto}>🏠 Abrigo</Text></TouchableOpacity>
         <TouchableOpacity style={styles.chipFiltro}><Text style={styles.chipTexto}>🩺 Saúde</Text></TouchableOpacity>
       </View>
-    </View> // <-- CORREÇÃO: Fechamento correto da View do renderMapa
+      
+      <Text style={[styles.tituloPagina, {fontSize: 20, marginTop: 20}]}>Serviços na Área (Lista)</Text>
+      <ScrollView style={{flex: 1}}>
+        {servicos.map(servico => (
+          <View key={servico.id} style={styles.cardCatalogo}>
+            <Text style={styles.iconeCard}>{servico.icone}</Text>
+            <View style={styles.infoCard}>
+              <Text style={styles.tituloCardCatalogo}>{servico.nome}</Text>
+              <Text style={styles.textoCardCatalogo}>{servico.endereco}</Text>
+            </View>
+          </View>
+        ))}
+      </ScrollView>
+    </View> 
   );
 
   // Tela 4: Catálogo de Serviços
-  // CORREÇÃO: Movida para fora do renderMapa e sintaxe corrigida de () = ( para () => (
   const renderCatalogo = () => (
     <View style={styles.container}>
       <BotaoVoltar onPress={() => navegarPara('DASHBOARD')} />
       <Text style={[styles.tituloPagina, {textAlign: 'center', marginTop: 30}]}>Catálogo de Apoio</Text>
+      
       <ScrollView>
-        {MOCK_SERVICOS.map(servico => (
+        {servicos.map(servico => (
           <View key={servico.id} style={styles.cardCatalogo}>
             <Text style={styles.iconeCard}>{servico.icone}</Text>
             <View style={styles.infoCard}>
@@ -166,7 +284,7 @@ export default function App() {
             </View>
             <TouchableOpacity 
               style={styles.botaoContato}
-              onPress={() => simularAcao('Contato', `Ligando para ${servico.nome}... (Simulação)`)}
+              onPress={() => simularAcao('Contato', `Ligando para ${servico.nome}...\n${servico.fone}`)}
               accessibilityLabel={`Ligar para ${servico.nome}`}
             >
               <Text style={styles.textoBotaoContato}>📞</Text>
@@ -177,24 +295,36 @@ export default function App() {
     </View>
   );
 
-  // Tela 5: Chat (Simulação)
-  const renderChat = () => (
-    <View style={[styles.container, {paddingBottom: 80}]}>
+  // Tela 5 agora é 'Contatos' ***
+  const renderContatos = () => (
+    <View style={styles.container}>
       <BotaoVoltar onPress={() => navegarPara('DASHBOARD')} />
-      <Text style={[styles.tituloPagina, {textAlign: 'center', marginTop: 30}]}>Chat de Apoio</Text>
-      <ScrollView style={styles.chatContainer}>
-        <Text style={styles.chatMensagem}>🤖 Olá! Eu sou o assistente virtual do Conecta+. Como posso ajudar?</Text>
-        <Text style={styles.chatMensagem}>🤖 Você pode perguntar sobre:{"\n"}1. Onde encontrar abrigos?{"\n"}2. Como conseguir cesta básica?</Text>
-        <Text style={[styles.chatMensagem, styles.chatMensagemUsuario]}>Onde encontro abrigos?</Text>
-        <Text style={styles.chatMensagem}>🤖 Buscando abrigos próximos... Encontrei o "Albergue Municipal Tia Branca". Veja no catálogo para mais detalhes.</Text>
+      <Text style={[styles.tituloPagina, {textAlign: 'center', marginTop: 30}]}>Contatos / WhatsApp</Text>
+      <Text style={[styles.subtituloApp, {color: COLORS.preto, fontSize: 16, marginBottom: 20, textAlign: 'left'}]}>
+        Entre em contato direto com os serviços de apoio.
+      </Text>
+      <ScrollView>
+        {servicos.map(servico => (
+          <View key={servico.id} style={styles.cardCatalogo}>
+            <Text style={styles.iconeCard}>{servico.icone}</Text>
+            <View style={styles.infoCard}>
+              <Text style={styles.tituloCardCatalogo}>{servico.nome}</Text>
+              <Text style={styles.textoCardCatalogo}>{servico.categoria}</Text>
+              <Text style={[styles.textoCardCatalogo, {fontWeight: 'bold'}]}>{servico.fone}</Text>
+            </View>
+            <TouchableOpacity 
+              style={[styles.botaoContato, {backgroundColor: COLORS.verdeEsperanca, width: 50, height: 50, borderRadius: 25}]}
+              onPress={() => abrirWhatsApp(servico.fone, servico.nome)}
+              accessibilityLabel={`Conversar no WhatsApp com ${servico.nome}`}
+            >
+              <Text style={styles.textoBotaoContato}>💬</Text>
+            </TouchableOpacity>
+          </View>
+        ))}
       </ScrollView>
-      <View style={styles.chatInputContainer}>
-        {/* Simulação de Input */}
-        <Text style={[styles.input, { flex: 1, color: '#999', paddingTop: 14}]}>Digite sua mensagem...</Text>
-        <TouchableOpacity><Text style={styles.chatEnviar}>Enviar</Text></TouchableOpacity>
-      </View>
     </View>
   );
+
 
   // Tela 6: Eventos e Oportunidades
   const renderEventos = () => (
@@ -219,7 +349,7 @@ export default function App() {
     </View>
   );
 
-  // Tela 7: Perfil (Simulação)
+  // Tela 7: Perfil
   const renderPerfil = () => (
     <View style={styles.container}>
       <BotaoVoltar onPress={() => navegarPara('DASHBOARD')} />
@@ -242,10 +372,11 @@ export default function App() {
     </View>
   );
 
-  // --- NOVO: Tela 8: Cadastro ---
+  // Tela 8: Cadastro
   const renderCadastro = () => (
     <View style={styles.container}>
-      <BotaoVoltar onPress={() => navegarPara('BOAS_VINDAS')} />
+      {/* *** MUDANÇA: Botão voltar agora leva para a tela de escolha *** */}
+      <BotaoVoltar onPress={() => navegarPara('LOGIN_CADASTRO_APOIO')} />
       <Text style={[styles.tituloPagina, {textAlign: 'center', marginTop: 30}]}>Cadastro de Apoio</Text>
       <ScrollView>
         <Text style={styles.labelInput}>Nome Completo:</Text>
@@ -267,35 +398,300 @@ export default function App() {
           autoCapitalize="none"
           accessibilityLabel="Campo para email"
         />
-        
-        <Text style={styles.labelInput}>Endereço:</Text>
+
+        {/* *** Campos de Senha *** */}
+        <Text style={styles.labelInput}>Senha:</Text>
         <TextInput 
           style={styles.input} 
-          placeholder="Rua, Numero, Bairro, Cidade"
-          value={enderecoCadastro}
-          onChangeText={setEnderecoCadastro}
-          keyboardType="address"
-          autoCapitalize="none"
-          accessibilityLabel="Endereço"
+          placeholder="Crie uma senha" 
+          value={senhaCadastro}
+          onChangeText={setSenhaCadastro}
+          secureTextEntry={true}
+          accessibilityLabel="Campo para senha"
         />
+
+        <Text style={styles.labelInput}>Confirmar Senha:</Text>
+        <TextInput 
+          style={styles.input} 
+          placeholder="Confirme sua senha" 
+          value={confirmarSenhaCadastro}
+          onChangeText={setConfirmarSenhaCadastro}
+          secureTextEntry={true}
+          accessibilityLabel="Campo para confirmar senha"
+        />
+        {/* *** FIM (Campos de Senha) *** */}
+
+        <Text style={styles.labelInput}>Telefone (com DDD):</Text>
+        <TextInput 
+          style={styles.input} 
+          placeholder="(31) 99999-9999"
+          value={telefoneCadastro}
+          onChangeText={setTelefoneCadastro}
+          keyboardType="phone-pad"
+          accessibilityLabel="Campo para Telefone"
+        />
+
+        {/* *** Campos de endereço separados *** */}
+        <Text style={styles.labelInput}>Rua / Avenida:</Text>
+        <TextInput 
+          style={styles.input} 
+          placeholder="Ex: Av. Afonso Pena"
+          value={ruaCadastro}
+          onChangeText={setRuaCadastro}
+          accessibilityLabel="Rua ou Avenida"
+        />
+
+        <Text style={styles.labelInput}>Número:</Text>
+        <TextInput 
+          style={styles.input} 
+          placeholder="Ex: 100"
+          value={numeroCadastro}
+          onChangeText={setNumeroCadastro}
+          keyboardType="numeric"
+          accessibilityLabel="Número do endereço"
+        />
+
+        <Text style={styles.labelInput}>Bairro:</Text>
+        <TextInput 
+          style={styles.input} 
+          placeholder="Ex: Centro"
+          value={bairroCadastro}
+          onChangeText={setBairroCadastro}
+          accessibilityLabel="Bairro"
+        />
+
+        <Text style={styles.labelInput}>Cidade:</Text>
+        <TextInput 
+          style={styles.input} 
+          placeholder="Ex: Belo Horizonte"
+          value={cidadeCadastro}
+          onChangeText={setCidadeCadastro}
+          accessibilityLabel="Cidade"
+        />
+        {/* *** FIM DA MUDANÇA *** */}
+
+        <Text style={styles.labelInput}>Tipo de Apoio Oferecido:</Text>
+        <View style={styles.toggleContainer}>
+          {CATEGORIAS_APOIO.map(categoria => (
+            <TouchableOpacity
+              key={categoria}
+              style={[
+                styles.chipFiltro,
+                tipoApoioCadastro === categoria ? {backgroundColor: COLORS.verdeEsperanca} : {backgroundColor: COLORS.azulCalmo, opacity: 0.7}
+              ]}
+              onPress={() => setTipoApoioCadastro(categoria)}
+            >
+              <Text style={styles.chipTexto}>{getIconePorCategoria(categoria)} {categoria}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
 
         <TouchableOpacity
           style={[styles.botaoPrincipal, { backgroundColor: COLORS.verdeEsperanca, marginTop: 30 }]}
           onPress={() => {
+            // *** Validação e construção do endereço ***
             // Validação simples
-            if (!nomeCadastro || !emailCadastro || !tipoApoio) {
+            if (!nomeCadastro || !emailCadastro || !telefoneCadastro || !tipoApoioCadastro || !ruaCadastro || !numeroCadastro || !bairroCadastro || !cidadeCadastro || !senhaCadastro || !confirmarSenhaCadastro) {
               simularAcao('Erro', 'Por favor, preencha todos os campos.');
               return;
             }
-            // Simular cadastro
+
+            // *** Validação de Senha ***
+            if (senhaCadastro !== confirmarSenhaCadastro) {
+              simularAcao('Erro', 'As senhas não coincidem.');
+              return;
+            }
+
+            // 1. Criar novo serviço
+            const novoId = (servicos.length + 1).toString();
+
+            const novaCoordenada = {
+              latitude: -19.92 + (Math.random() - 0.5) * 0.05, 
+              longitude: -43.93 + (Math.random() - 0.5) * 0.05,
+            };
+
+            // *** Construir endereço completo ***
+            const enderecoCompleto = `${ruaCadastro}, ${numeroCadastro} - ${bairroCadastro}, ${cidadeCadastro}`;
+
+            const novoServico = {
+              id: novoId,
+              categoria: tipoApoioCadastro,
+              nome: nomeCadastro,
+              endereco: enderecoCompleto, 
+              fone: telefoneCadastro,
+              icone: getIconePorCategoria(tipoApoioCadastro),
+              coordinate: novaCoordenada 
+            };
+
+            // 2. Adicionar ao state global de serviços
+            setServicos(prevServicos => [...prevServicos, novoServico]);
+
+            // 3. Limpar formulário
+            setNomeCadastro('');
+            setEmailCadastro('');
+            // *** MUDANÇA: Limpar campos de endereço ***
+            setRuaCadastro('');
+            setNumeroCadastro('');
+            setBairroCadastro('');
+            setCidadeCadastro('');
+            setTelefoneCadastro('');
+            setTipoApoioCadastro('');
+            // *** NOVO: Limpar campos de senha ***
+            setSenhaCadastro('');
+            setConfirmarSenhaCadastro('');
+
+            // 4. Simular cadastro
             simularAcao('Cadastro', `Cadastro de ${nomeCadastro} realizado com sucesso! Bem-vindo(a).`);
-            // Definir o perfil e navegar para o dashboard
-            selecionarPerfil('OFERECE_APOIO'); 
+            
+            // 5. Definir o perfil e navegar para o dashboard
+            setPerfilUsuario('OFERECE_APOIO');
+            navegarPara('DASHBOARD'); 
           }}
           accessibilityRole="button"
           accessibilityLabel="Finalizar cadastro e entrar"
         >
           <Text style={styles.textoBotaoPrincipal}>Finalizar Cadastro</Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </View>
+  );
+
+  // *** Tela 9: Login ***
+  const renderLogin = () => (
+    <View style={styles.container}>
+      <BotaoVoltar onPress={() => navegarPara('LOGIN_CADASTRO_APOIO')} />
+      <Text style={[styles.tituloPagina, {textAlign: 'center', marginTop: 30}]}>Login do Apoiador</Text>
+      <ScrollView>
+        <Text style={styles.labelInput}>Email:</Text>
+        <TextInput 
+          style={styles.input} 
+          placeholder="seu.email@exemplo.com" 
+          value={emailLogin}
+          onChangeText={setEmailLogin}
+          keyboardType="email-address"
+          autoCapitalize="none"
+        />
+        
+        <Text style={styles.labelInput}>Senha:</Text>
+        <TextInput 
+          style={styles.input} 
+          placeholder="Sua senha"
+          value={senhaLogin}
+          onChangeText={setSenhaLogin}
+          secureTextEntry={true}
+        />
+
+        <TouchableOpacity
+          style={[styles.botaoPrincipal, { backgroundColor: COLORS.azulCalmo, marginTop: 30 }]}
+          onPress={() => {
+            // (Lógica de login simulada)
+            if (!emailLogin || !senhaLogin) {
+              simularAcao('Erro', 'Preencha email e senha.');
+              return;
+            }
+            
+            // 1. Limpar formulário
+            setEmailLogin('');
+            setSenhaLogin('');
+
+            // 2. Simular sucesso
+            simularAcao('Login', `Login realizado com sucesso!`);
+            
+            // 3. Definir o perfil e navegar para o dashboard
+            setPerfilUsuario('OFERECE_APOIO');
+            navegarPara('DASHBOARD'); 
+          }}
+        >
+          <Text style={styles.textoBotaoPrincipal}>Entrar</Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </View>
+  );
+
+
+  // *** Tela 10: Lista de Alertas ***
+  const renderAlertas = () => (
+    <View style={styles.container}>
+      <BotaoVoltar onPress={() => navegarPara('DASHBOARD')} />
+      <Text style={[styles.tituloPagina, {textAlign: 'center', marginTop: 30}]}>Alertas Urgentes</Text>
+
+      {/* Botão: Só aparece se for 'OFERECE_APOIO' */}
+      {perfilUsuario === 'OFERECE_APOIO' && (
+        <TouchableOpacity 
+          style={[styles.botaoPrincipal, {backgroundColor: COLORS.vermelhoAlerta, marginBottom: 20}]}
+          onPress={() => navegarPara('NOVO_ALERTA')}
+        >
+          <Text style={styles.textoBotaoPrincipal}>📢 Adicionar Novo Alerta</Text>
+        </TouchableOpacity>
+      )}
+
+      <ScrollView>
+        {alertas.length === 0 ? (
+          <Text style={styles.textoCardEvento}>Nenhum alerta urgente no momento.</Text>
+        ) : (
+          alertas.map(alerta => (
+            <View key={alerta.id} style={[styles.cardEvento, {borderColor: COLORS.vermelhoAlerta, borderWidth: 2, backgroundColor: '#FFF8F8'}]}>
+              <Text style={[styles.tituloCardEvento, {color: COLORS.vermelhoAlerta}]}>📢 {alerta.titulo}</Text>
+              <Text style={[styles.textoCardEvento, {marginBottom: 0, marginTop: 8}]}>{alerta.desc}</Text>
+            </View>
+          ))
+        )}
+      </ScrollView>
+    </View>
+  );
+
+  // *** Tela 11: Formulário de Novo Alerta ***
+  const renderNovoAlerta = () => (
+    <View style={styles.container}>
+      <BotaoVoltar onPress={() => navegarPara('ALERTAS')} />
+      <Text style={[styles.tituloPagina, {textAlign: 'center', marginTop: 30}]}>Novo Alerta Urgente</Text>
+      <ScrollView>
+        <Text style={styles.labelInput}>Título do Alerta:</Text>
+        <TextInput 
+          style={styles.input} 
+          placeholder="Ex: Risco de Enchente" 
+          value={tituloAlerta}
+          onChangeText={setTituloAlerta}
+        />
+        
+        <Text style={styles.labelInput}>Descrição Completa:</Text>
+        <TextInput 
+          style={styles.inputMultilinha} 
+          placeholder="Descreva a situação, locais afetados, recomendações..."
+          value={descAlerta}
+          onChangeText={setDescAlerta}
+          multiline={true}
+          numberOfLines={6}
+        />
+
+        <TouchableOpacity
+          style={[styles.botaoPrincipal, { backgroundColor: COLORS.vermelhoAlerta, marginTop: 30 }]}
+          onPress={() => {
+            if (!tituloAlerta || !descAlerta) {
+              simularAcao('Erro', 'Preencha o título e a descrição.');
+              return;
+            }
+
+            // 1. Criar novo alerta
+            const novoAlerta = {
+              id: new Date().toISOString(),
+              titulo: tituloAlerta,
+              desc: descAlerta,
+            };
+
+            // 2. Adicionar ao início da lista de alertas
+            setAlertas(prevAlertas => [novoAlerta, ...prevAlertas]);
+
+            // 3. Limpar formulário
+            setTituloAlerta('');
+            setDescAlerta('');
+
+            // 4. Voltar para a lista
+            navegarPara('ALERTAS');
+          }}
+        >
+          <Text style={styles.textoBotaoPrincipal}>Publicar Alerta</Text>
         </TouchableOpacity>
       </ScrollView>
     </View>
@@ -395,15 +791,23 @@ export default function App() {
         return renderMapa();
       case 'CATALOGO':
         return renderCatalogo();
-      case 'CHAT':
-        return renderChat();
+      // Case 'CHAT' para 'CONTATOS' ***
+      case 'CONTATOS':
+        return renderContatos();
       case 'EVENTOS':
         return renderEventos();
       case 'PERFIL':
         return renderPerfil();
-      // NOVO: Case para a tela de cadastro
       case 'CADASTRO':
         return renderCadastro();
+      case 'LOGIN_CADASTRO_APOIO':
+        return renderLoginCadastroApoio();
+      case 'LOGIN':
+        return renderLogin();
+      case 'ALERTAS':
+        return renderAlertas();
+      case 'NOVO_ALERTA':
+        return renderNovoAlerta();
       default:
         return renderBoasVindas();
     }
@@ -413,8 +817,6 @@ export default function App() {
     <SafeAreaView style={styles.safeArea}>
       {renderTela()}
       {renderModalAcessibilidade()}
-      {/* O Botão de Acessibilidade é renderizado dentro da tela de Boas-Vindas 
-          ou pode ser movido para fora do switch se for necessário em todas as telas */}
       {telaAtual !== 'BOAS_VINDAS' && <BotaoAcessibilidade onPress={() => setModalAcessibilidadeVisivel(true)} />}
     </SafeAreaView>
   );
@@ -500,7 +902,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   cartaoDashboard: {
-    width: (width / 2) - 30, // Largura de 2 colunas com espaçamento
+    width: (width / 2) - 30,
     height: 150,
     borderRadius: 16,
     padding: 16,
@@ -534,8 +936,19 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   // --- Mapa ---
-  mapaPlaceholder: {
-    height: 300,
+  mapContainer: {
+    height: 300, // Altura do mapa
+    width: '100%',
+    borderRadius: 16,
+    overflow: 'hidden', // Garante que o mapa fique dentro das bordas
+    marginBottom: 20,
+    backgroundColor: '#E0E0E0', // Cor de fundo enquanto o mapa carrega
+  },
+  mapView: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  mapaPlaceholder: { // (Mantido para referência, mas não usado em 'renderMapa')
+    height: 200,
     backgroundColor: '#E0E0E0',
     borderRadius: 16,
     justifyContent: 'center',
@@ -556,12 +969,13 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 20,
     marginRight: 10,
+    marginBottom: 10,
   },
   chipTexto: {
     color: COLORS.branco,
     fontWeight: 'bold',
   },
-  // --- Catálogo ---
+  // --- Catálogo / Contatos ---
   cardCatalogo: {
     backgroundColor: COLORS.branco,
     borderRadius: 12,
@@ -592,7 +1006,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   botaoContato: {
-    backgroundColor: COLORS.verdeEsperanca,
+    backgroundColor: COLORS.azulCalmo,
     width: 44,
     height: 44,
     borderRadius: 22,
@@ -604,57 +1018,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
     color: COLORS.branco,
   },
-  // --- Chat ---
-  chatContainer: {
-    flex: 1,
-  },
-  chatMensagem: {
-    backgroundColor: COLORS.branco,
-    padding: 12,
-    borderRadius: 12,
-    borderTopLeftRadius: 0,
-    marginBottom: 10,
-    maxWidth: '85%',
-    alignSelf: 'flex-start',
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
-  },
-  chatMensagemUsuario: {
-    backgroundColor: COLORS.azulCalmo,
-    color: COLORS.branco,
-    alignSelf: 'flex-end',
-    borderTopLeftRadius: 12,
-    borderTopRightRadius: 0,
-  },
-  chatInputContainer: {
-    flexDirection: 'row',
-    padding: 10,
-    borderTopWidth: 1,
-    borderColor: '#E0E0E0',
-    backgroundColor: COLORS.cinzaClaro,
-    position: 'absolute', 
-    bottom: 0,
-    left: 0,
-    right: 0,
-  },
-  chatInput: { // Estilo de simulação de Input
-    flex: 1,
-    padding: 10,
-    backgroundColor: COLORS.branco,
-    borderRadius: 20,
-    borderColor: '#E0E0E0',
-    borderWidth: 1,
-  },
-  chatEnviar: {
-    padding: 10,
-    marginLeft: 10,
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: COLORS.azulCalmo,
-    alignSelf: 'center',
-  },
+  
   // --- Eventos ---
   cardEvento: {
     backgroundColor: COLORS.branco,
@@ -703,7 +1067,7 @@ const styles = StyleSheet.create({
     color: COLORS.preto,
   },
 
-  // --- NOVO: Estilos do Cadastro ---
+  // --- Estilos do Cadastro ---
   labelInput: {
     fontSize: 16,
     fontWeight: 'bold',
@@ -721,31 +1085,25 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: COLORS.preto,
   },
+  // *** ESTILO ***
+  inputMultilinha: {
+    backgroundColor: COLORS.branco,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E0E0E0', 
+    fontSize: 16,
+    color: COLORS.preto,
+    height: 120, 
+    textAlignVertical: 'top', 
+  },
   toggleContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexWrap: 'wrap', 
     marginTop: 8,
   },
-  toggleBotao: {
-    flex: 1,
-    padding: 16,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: COLORS.azulCalmo,
-    alignItems: 'center',
-    backgroundColor: COLORS.branco,
-  },
-  toggleBotaoAtivo: {
-    backgroundColor: COLORS.azulCalmo,
-  },
-  toggleTexto: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: COLORS.azulCalmo,
-  },
-  toggleTextoAtivo: {
-    color: COLORS.branco,
-  },
+
   // --- Acessibilidade (FAB e Modal) ---
   fabAcessibilidade: {
     position: 'absolute',
